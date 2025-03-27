@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassmorphism Music Player</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #8A2387, #E94057, #F27121);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            height: 100%;
+            padding: 1rem;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .glass:hover {
+            box-shadow: 0 12px 42px rgba(0, 0, 0, 0.3), 
+                        0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+        }
+        .search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+        .control-btn {
+            transition: all 0.2s ease;
+        }
+        .control-btn:hover {
+            transform: scale(1.15);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        .play-pause-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            width: 50px;
+            height: 50px;
+        }
+        @media (min-width: 640px) {
+            .play-pause-btn {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        .play-pause-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .img-container:hover {
+            transform: scale(1.02);
+        }
+        .img-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 70%, rgba(0, 0, 0, 0.5));
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass p-6 sm:p-8 w-[90%] max-w-md mx-auto text-white text-center">
+        <!-- Search Bar -->
+        <div class="relative flex items-center mb-6 sm:mb-8">
+            <input id="searchInput" type="text" placeholder="Search for a song..."
+                class="w-full p-3 sm:p-4 pl-10 sm:pl-12 rounded-full search-input text-white focus:outline-none">
+            <i class="fas fa-search absolute left-3 sm:left-4 text-gray-300"></i>
+            <button id="searchBtn" class="absolute right-3 sm:right-4 bg-white bg-opacity-20 p-1.5 sm:p-2 rounded-full hover:bg-opacity-30 transition">
+                <i class="fas fa-arrow-right text-white"></i>
+            </button>
+        </div>
+
+        <!-- Song Details -->
+        <div class="mt-4 sm:mt-6 mb-4 sm:mb-8">
+            <div class="img-container mx-auto rounded-xl w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 overflow-hidden">
+                <img id="songImage" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQc92Pk7dBWRfEBz1-5FmTRGuYeV0TZP0LAg&s" alt="Song Image"
+                    class="w-full h-full object-cover">
+            </div>
+            <h2 id="songTitle" class="text-xl sm:text-2xl font-bold mt-4 sm:mt-5 mb-1">Song Title</h2>
+            <p id="songArtist" class="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3">Artist Name</p>
+            <a id="saavnLink" href="#" target="_blank" class="hidden px-3 py-1.5 sm:px-4 sm:py-2 bg-white bg-opacity-20 rounded-full text-xs text-white hover:bg-opacity-30 transition inline-flex items-center gap-2 mt-1 sm:mt-2">
+                <i class="fas fa-external-link-alt"></i> Play on Saavn
+            </a>
+        </div>
+
+        <!-- Time Display -->
+        <div class="flex justify-between text-xs text-gray-300 mb-1 px-1">
+            <span id="currentTime">0:00</span>
+            <span id="totalTime">0:00</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-6 sm:mb-8">
+            <input id="progressBar" type="range" value="0" max="100" class="w-full cursor-pointer">
+        </div>
+
+        <!-- Controls -->
+        <div class="flex justify-between items-center px-1 sm:px-2 mb-6 sm:mb-8">
+            <button id="shuffleBtn" class="control-btn text-lg sm:text-xl"><i class="fas fa-random"></i></button>
+            <button id="prevBtn" class="control-btn text-xl sm:text-2xl"><i class="fas fa-step-backward"></i></button>
+            <button id="playPauseBtn" class="play-pause-btn">
+                <i class="fas fa-pause text-xl sm:text-2xl"></i>
+            </button>
+            <button id="nextBtn" class="control-btn text-xl sm:text-2xl"><i class="fas fa-step-forward"></i></button>
+            <button id="loopBtn" class="control-btn text-lg sm:text-xl"><i class="fas fa-redo-alt"></i></button>
+        </div>
+
+        <!-- Volume Control -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <i class="fas fa-volume-up text-xs sm:text-sm"></i>
+            <input id="volumeControl" type="range" value="50" max="100" class="w-full cursor-pointer">
+        </div>
+
+        <!-- Audio Player -->
+        <audio id="audioPlayer" src=""></audio>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById("audioPlayer");
+        const progressBar = document.getElementById("progressBar");
+        const currentTimeDisplay = document.getElementById("currentTime");
+        const totalTimeDisplay = document.getElementById("totalTime");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const loopBtn = document.getElementById("loopBtn");
+        const searchInput = document.getElementById("searchInput");
+        const searchBtn = document.getElementById("searchBtn");
+        const saavnLink = document.getElementById("saavnLink");
+        
+        let currentSongIndex = 0;
+        let playlist = [];
+        let isShuffled = false;
+        let isLooping = false;
+        
+        // Initialize event listeners
+        document.addEventListener("DOMContentLoaded", function() {
+            // Search button click
+            searchBtn.addEventListener("click", searchSong);
+            
+            // Search on Enter key
+            searchInput.addEventListener("keyup", function(event) {
+                if (event.key === "Enter") {
+                    searchSong();
+                }
+            });
+            
+            // Play/Pause button
+            playPauseBtn.addEventListener("click", togglePlay);
+            
+            // Previous button
+            prevBtn.addEventListener("click", playPrevious);
+            
+            // Next button
+            nextBtn.addEventListener("click", playNext);
+            
+            // Shuffle button
+            shuffleBtn.addEventListener("click", toggleShuffle);
+            
+            // Loop button
+            loopBtn.addEventListener("click", toggleLoop);
+            
+            // Audio ended event
+            audioPlayer.addEventListener("ended", function() {
+                playNext();
+            });
+        });
+
+        // Update time displays and progress bar
+        audioPlayer.addEventListener("timeupdate", () => {
+            const currentTime = audioPlayer.currentTime;
+            const duration = audioPlayer.duration || 0;
+            
+            // Update progress bar
+            progressBar.value = (currentTime / duration) * 100;
+            
+            // Update time displays
+            currentTimeDisplay.textContent = formatTime(currentTime);
+            if (!isNaN(duration)) {
+                totalTimeDisplay.textContent = formatTime(duration);
+            }
+        });
+
+        // Format time in MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Volume control
+        document.getElementById("volumeControl").addEventListener("input", (e) => {
+            audioPlayer.volume = e.target.value / 100;
+        });
+
+        // Progress bar seeking
+        progressBar.addEventListener("input", (e) => {
+            const seekTime = audioPlayer.duration * (e.target.value / 100);
+            audioPlayer.currentTime = seekTime;
+        });
+
+        // Song control functions
+        function playPrevious() {
+            if (playlist.length <= 1) return;
+            
+            currentSongIndex--;
+            if (currentSongIndex < 0) {
+                currentSongIndex = playlist.length - 1;
+            }
+            
+            playSongFromPlaylist(currentSongIndex);
+        }
+        
+        function playNext() {
+            if (playlist.length <= 1) return;
+            
+            currentSongIndex++;
+            if (currentSongIndex >= playlist.length) {
+                if (isLooping) {
+                    currentSongIndex = 0;
+                } else {
+                    currentSongIndex = playlist.length - 1;
+                    return;
+                }
+            }
+            
+            playSongFromPlaylist(currentSongIndex);
+        }
+        
+        function toggleShuffle() {
+            isShuffled = !isShuffled;
+            if (isShuffled) {
+                shuffleBtn.classList.add("text-green-400");
+            } else {
+                shuffleBtn.classList.remove("text-green-400");
+            }
+        }
+        
+        function toggleLoop() {
+            isLooping = !isLooping;
+            if (isLooping) {
+                loopBtn.classList.add("text-green-400");
+            } else {
+                loopBtn.classList.remove("text-green-400");
+            }
+        }
+        
+        function playSongFromPlaylist(index) {
+            if (playlist.length === 0 || index >= playlist.length) return;
+            
+            const song = playlist[index];
+            document.getElementById("songImage").src = song.image;
+            document.getElementById("songTitle").innerText = song.title;
+            document.getElementById("songArtist").innerText = song.artist;
+            document.getElementById("audioPlayer").src = song.audioUrl;
+            
+            if (song.saavnUrl) {
+                saavnLink.href = song.saavnUrl;
+                saavnLink.classList.remove("hidden");
+            } else {
+                saavnLink.classList.add("hidden");
+            }
+            
+            audioPlayer.play()
+                .then(() => {
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause text-2xl"></i>';
+                })
+                .catch(err => {
+                    console.error("Error playing audio:", err);
+                });
+        }
+
+        async function searchSong() {
+            let query = document.getElementById("searchInput").value.trim();
+            if (!query) {
+                alert("Enter a song name!");
+                return;
+            }
+
+            // Show loading state
+            document.getElementById("songTitle").innerText = "Searching...";
+            document.getElementById("songArtist").innerText = "";
+            saavnLink.classList.add("hidden");
+
+            let apiUrl = `https://saavn.dev/api/search?query=${query}`;
+            try {
+                let response = await fetch(apiUrl);
+                let data = await response.json();
+                console.log(data);
+
+                // Reset playlist
+                playlist = [];
+                currentSongIndex = 0;
+
+                // Check if we have songs in the results
+                if (data.data && data.data.songs && data.data.songs.results && data.data.songs.results.length > 0) {
+                    // Add songs to playlist
+                    data.data.songs.results.forEach((song, index) => {
+                        let imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQc92Pk7dBWRfEBz1-5FmTRGuYeV0TZP0LAg&s";
+                        if (song.image && Array.isArray(song.image)) {
+                            imageUrl = song.image[2]?.url || song.image[1]?.url || song.image[0]?.url;
+                        }
+                        
+                        let audioUrl = "";
+                        if (song.downloadUrl && Array.isArray(song.downloadUrl)) {
+                            audioUrl = song.downloadUrl[4]?.url || song.downloadUrl[0]?.url;
+                        } else if (song.url) {
+                            audioUrl = song.url;
+                        }
+                        
+                        // Create original Saavn URL
+                        let saavnUrl = "";
+                        if (song.url) {
+                            saavnUrl = song.url;
+                        } else if (song.permaUrl) {
+                            saavnUrl = song.permaUrl;
+                        }
+                        
+                        playlist.push({
+                            title: song.title || "Unknown Title",
+                            artist: song.primaryArtists || song.description || "Unknown Artist",
+                            image: imageUrl,
+                            audioUrl: audioUrl,
+                            saavnUrl: saavnUrl
+                        });
+                    });
+                    
+                    // Play the first song
+                    playSongFromPlaylist(0);
+                    
+                } else {
+                    document.getElementById("songTitle").innerText = "No songs found";
+                    document.getElementById("songArtist").innerText = "Try a different search";
+                    saavnLink.classList.add("hidden");
+                }
+            } catch (error) {
+                console.error("Error fetching song:", error);
+                document.getElementById("songTitle").innerText = "Error finding song";
+                document.getElementById("songArtist").innerText = "Please try again";
+                saavnLink.classList.add("hidden");
+            }
+        }
+
+        function togglePlay() {
+            if (audioPlayer.paused) {
+                audioPlayer.play()
+                    .then(() => {
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause text-2xl"></i>';
+                    })
+                    .catch(err => {
+                        console.error("Error playing audio:", err);
+                    });
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play text-2xl"></i>';
+            }
+        }
+    </script>
+
+</body>
+</html>
